@@ -1,5 +1,3 @@
-use std::collections::BTreeSet;
-
 use anyhow::Result;
 
 fn read_numbers(filename: &str) -> Result<Vec<i32>> {
@@ -21,16 +19,21 @@ fn main() -> Result<()> {
     // TODO(jsvana): make this a commandline argument
     let numbers = read_numbers("input.txt")?;
 
-    let mut missing = Vec::new();
-    for number in numbers.iter() {
-        missing.push(2020 - number);
-    }
+    for (i, first_number) in numbers.iter().enumerate() {
+        for (j, second_number) in numbers.iter().enumerate() {
+            if i == j {
+                continue;
+            }
 
-    let all: BTreeSet<_> = numbers.iter().collect();
-    for (i, missing_number) in missing.into_iter().enumerate() {
-        if all.contains(&missing_number) {
-            println!("{}", missing_number * numbers[i]);
-            break;
+            for (k, third_number) in numbers.iter().enumerate() {
+                if i == k {
+                    continue;
+                }
+
+                if first_number + second_number + third_number == 2020 {
+                    println!("{}", first_number * second_number * third_number);
+                }
+            }
         }
     }
 
