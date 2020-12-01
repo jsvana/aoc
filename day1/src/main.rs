@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use anyhow::Result;
 use structopt::StructOpt;
 
@@ -6,7 +8,8 @@ struct Args {
     filename: String,
 }
 
-fn read_numbers(filename: &str) -> Result<Vec<i32>> {
+fn read_numbers<T>(filename: &str) -> Result<Vec<T>>
+where T: FromStr, <T as FromStr>::Err: 'static + std::error::Error + Send + Sync {
     let contents = std::fs::read_to_string(filename)?;
 
     let mut numbers = Vec::new();
@@ -24,7 +27,7 @@ fn read_numbers(filename: &str) -> Result<Vec<i32>> {
 fn main() -> Result<()> {
     let args = Args::from_args();
 
-    let numbers = read_numbers(&args.filename)?;
+    let numbers: Vec<i32> = read_numbers(&args.filename)?;
 
     for (i, first_number) in numbers.iter().enumerate() {
         for (j, second_number) in numbers.iter().enumerate() {
