@@ -19,7 +19,7 @@ fn read_numbers(filename: &str) -> Result<Vec<i32>> {
 
 fn main() -> Result<()> {
     // TODO(jsvana): make this a commandline argument
-    let numbers = read_numbers("test.txt")?;
+    let numbers = read_numbers("input.txt")?;
 
     let mut missing = Vec::new();
     for number in numbers.iter() {
