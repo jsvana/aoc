@@ -1,5 +1,8 @@
-use anyhow::{Result, format_err};
+use std::str::FromStr;
+
+use anyhow::Result;
 use structopt::StructOpt;
+use thiserror::Error;
 
 #[derive(StructOpt)]
 struct Args {
@@ -13,14 +16,22 @@ struct Policy {
     letter: char,
 }
 
-impl Policy {
-    fn from_str(line: &str) -> Result<Self> {
+#[derive(Debug, Error)]
+enum PolicyError {
+    #[error("general error: {0}")]
+    General(String),
+}
+
+impl FromStr for Policy {
+    type Err = PolicyError;
+
+    fn from_str(line: &str) -> Result<Self, Self::Err> {
         let parts: Vec<&str> = line.split("-").collect();
-        let lower_count: usize = parts.get(0).ok_or_else(|| format_err!("{} missing lower", line))?.parse()?;
-        let parts: Vec<&str> = parts.get(1).ok_or_else(|| format_err!("{} missing rest", line))?.split(" ").collect();
-        let higher_count: usize = parts.get(0).ok_or_else(|| format_err!("{} missing higher", line))?.parse()?;
-        let parts: Vec<&str> = parts.get(1).ok_or_else(|| format_err!("{} missing rest", line))?.split(":").collect();
-        let letter: char = parts.get(0).ok_or_else(|| format_err!("{} missing letter", line))?.parse()?;
+        let lower_count: usize = parts.get(0).ok_or_else(|| PolicyError::General(format!("{} missing lower", line)))?.parse().map_err(|_| PolicyError::General("can't parse".to_string()))?;
+        let parts: Vec<&str> = parts.get(1).ok_or_else(|| PolicyError::General(format!("{} missing rest", line)))?.split(" ").collect();
+        let higher_count: usize = parts.get(0).ok_or_else(|| PolicyError::General(format!("{} missing higher", line)))?.parse().map_err(|_| PolicyError::General("can't parse".to_string()))?;
+        let parts: Vec<&str> = parts.get(1).ok_or_else(|| PolicyError::General(format!("{} missing rest", line)))?.split(":").collect();
+        let letter: char = parts.get(0).ok_or_else(|| PolicyError::General(format!("{} missing letter", line)))?.parse().map_err(|_| PolicyError::General("can't parse".to_string()))?;
         Ok(Self {lower_count, higher_count, letter})
     }
 }
@@ -29,6 +40,14 @@ impl Policy {
 struct Password {
     policy: Policy,
     password: String,
+}
+
+#[derive(Debug, Error)]
+enum PasswordError {
+    #[error("policy error")]
+    Policy(#[from] PolicyError),
+    #[error("general error: {0}")]
+    General(String),
 }
 
 fn str_has_char_at(haystack: &str, needle: char, index: usize) -> bool {
@@ -41,19 +60,21 @@ fn str_has_char_at(haystack: &str, needle: char, index: usize) -> bool {
     false
 }
 
-impl Password {
-    fn from_str(line: &str) -> Result<Self> {
+impl FromStr for Password {
+    type Err = PasswordError;
+
+    fn from_str(line: &str) -> Result<Self, Self::Err> {
         let policy = Policy::from_str(line)?;
 
         let parts: Vec<&str> = line.split(" ").collect();
-        let password = parts.get(2).ok_or_else(|| format_err!("{} missing password", line))?.to_string();
+        let password = parts.get(2).ok_or_else(|| PasswordError::General(format!("{} missing password", line)))?.to_string();
 
         Ok(Self {policy, password})
     }
+}
 
+impl Password {
     fn passes(&self) -> bool {
-        let mut letter_count = 0;
-
         let first_okay = str_has_char_at(&self.password, self.policy.letter, self.policy.lower_count);
         let second_okay = str_has_char_at(&self.password, self.policy.letter, self.policy.higher_count);
 
@@ -61,7 +82,8 @@ impl Password {
     }
 }
 
-fn read_numbers(filename: &str) -> Result<Vec<Password>> {
+fn read_lines<T>(filename: &str) -> Result<Vec<T>>
+where T: FromStr, <T as FromStr>::Err: 'static + std::error::Error + Send + Sync {
     let contents = std::fs::read_to_string(filename)?;
 
     let mut values = Vec::new();
@@ -70,7 +92,7 @@ fn read_numbers(filename: &str) -> Result<Vec<Password>> {
             continue;
         }
 
-        values.push(Password::from_str(line)?);
+        values.push(line.parse()?);
     }
 
     Ok(values)
@@ -79,7 +101,7 @@ fn read_numbers(filename: &str) -> Result<Vec<Password>> {
 fn main() -> Result<()> {
     let args = Args::from_args();
 
-    let passwords = read_numbers(&args.filename)?;
+    let passwords: Vec<Password> = read_lines(&args.filename)?;
 
     let mut count = 0;
     for password in passwords.into_iter() {
