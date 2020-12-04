@@ -1,13 +1,7 @@
-use std::str::FromStr;
-
 use anyhow::{format_err, Result};
 use structopt::StructOpt;
-use thiserror::Error;
 
-#[derive(StructOpt)]
-struct Args {
-    filename: String,
-}
+use aoc_2020::Args;
 
 #[derive(Debug)]
 enum Tile {

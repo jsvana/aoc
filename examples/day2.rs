@@ -4,10 +4,7 @@ use anyhow::Result;
 use structopt::StructOpt;
 use thiserror::Error;
 
-#[derive(StructOpt)]
-struct Args {
-    filename: String,
-}
+use aoc_2020::{Args, read_lines};
 
 #[derive(Debug)]
 struct Policy {
@@ -80,22 +77,6 @@ impl Password {
 
         first_okay ^ second_okay
     }
-}
-
-fn read_lines<T>(filename: &str) -> Result<Vec<T>>
-where T: FromStr, <T as FromStr>::Err: 'static + std::error::Error + Send + Sync {
-    let contents = std::fs::read_to_string(filename)?;
-
-    let mut values = Vec::new();
-    for line in contents.split("\n") {
-        if line.is_empty() {
-            continue;
-        }
-
-        values.push(line.parse()?);
-    }
-
-    Ok(values)
 }
 
 fn main() -> Result<()> {
