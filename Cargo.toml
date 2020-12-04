@@ -4,11 +4,27 @@ version = "0.1.0"
 authors = ["Jay Vana <jaysvana@gmail.com>"]
 edition = "2018"
 
-[dependencies]
-anyhow = "*"
-structopt = "*"
+[[bin]]
+name = "day1"
+test = false
+bench = false
 
-[dev-dependencies]
+[[bin]]
+name = "day2"
+test = false
+bench = false
+
+[[bin]]
+name = "day3"
+test = false
+bench = false
+
+[[bin]]
+name = "day4"
+test = false
+bench = false
+
+[dependencies]
 anyhow = "*"
 structopt = "*"
 thiserror = "*"
