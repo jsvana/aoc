@@ -26,5 +26,6 @@ bench = false
 
 [dependencies]
 anyhow = "*"
+maplit = "*"
 structopt = "*"
 thiserror = "*"
