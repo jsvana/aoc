@@ -1,0 +1,16 @@
+[package]
+name = "aoc_2015"
+version = "0.1.0"
+authors = ["Jay Vana <jaysvana@gmail.com>"]
+edition = "2018"
+
+[[bin]]
+name = "day15"
+test = false
+bench = false
+
+[dependencies]
+anyhow = "*"
+maplit = "*"
+structopt = "*"
+thiserror = "*"
