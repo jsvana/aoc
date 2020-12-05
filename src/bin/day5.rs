@@ -63,9 +63,7 @@ fn main() -> Result<()> {
     let contents = std::fs::read_to_string(args.filename)?;
 
     let mut filled = Vec::with_capacity(1024);
-    for _ in 0..1024 {
-        filled.push(false);
-    }
+    Vec::resize_with(&mut filled, 1024, || false);
 
     for line in contents.split("\n") {
         let seat_id = find_seat_id(&Movement::list_from_str(line)?);
