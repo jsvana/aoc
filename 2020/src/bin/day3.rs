@@ -31,7 +31,11 @@ impl Map {
             width = match width {
                 Some(width) => {
                     if width != line.len() {
-                        return Err(format_err!("widths {} and {} don't match", width, line.len()));
+                        return Err(format_err!(
+                            "widths {} and {} don't match",
+                            width,
+                            line.len()
+                        ));
                     }
 
                     Some(width)
@@ -40,21 +44,23 @@ impl Map {
             };
 
             for tile_char in line.chars() {
-                tiles.push(
-                    match tile_char {
-                        '.' => Tile::Empty,
-                        '#' => Tile::Tree,
-                        _ => {
-                            return Err(format_err!("unknown char {}", tile_char));
-                        }
+                tiles.push(match tile_char {
+                    '.' => Tile::Empty,
+                    '#' => Tile::Tree,
+                    _ => {
+                        return Err(format_err!("unknown char {}", tile_char));
                     }
-                );
+                });
             }
 
             line_count += 1;
         }
 
-        Ok(Self {width: width.ok_or_else(|| format_err!("no width found"))?, height: line_count, tiles})
+        Ok(Self {
+            width: width.ok_or_else(|| format_err!("no width found"))?,
+            height: line_count,
+            tiles,
+        })
     }
 
     fn at(&self, x: usize, y: usize) -> Option<&Tile> {
@@ -97,13 +103,7 @@ fn main() -> Result<()> {
 
     let map = Map::from_str(&std::fs::read_to_string(args.filename)?)?;
 
-    let deltas = vec![
-        (1, 1),
-        (3, 1),
-        (5, 1),
-        (7, 1),
-        (1, 2),
-    ];
+    let deltas = vec![(1, 1), (3, 1), (5, 1), (7, 1), (1, 2)];
 
     let mut multiple = 1;
     for (x_delta, y_delta) in deltas.into_iter() {

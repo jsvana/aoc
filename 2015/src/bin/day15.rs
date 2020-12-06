@@ -1,4 +1,4 @@
-use std::collections::{BTreeSet, BTreeMap};
+use std::collections::{BTreeMap, BTreeSet};
 
 use anyhow::{format_err, Result};
 use maplit::btreeset;
@@ -34,58 +34,57 @@ struct Ingredient {
 impl Ingredient {
     fn from_name(name: &IngredientName) -> Self {
         match name {
-                IngredientName::Frosting => {
-                    Self {
-                        capacity: 4,
-                        durability: -2,
-                        flavor: 0,
-                        texture: 0,
-                        //calories: 5,
-                    }
+            IngredientName::Frosting => {
+                Self {
+                    capacity: 4,
+                    durability: -2,
+                    flavor: 0,
+                    texture: 0,
+                    //calories: 5,
                 }
-                IngredientName::Candy => {
-                    Self {
-                        capacity: 0,
-                        durability: 5,
-                        flavor: -1,
-                        texture: 0,
-                        //calories: 8,
-                    }
+            }
+            IngredientName::Candy => {
+                Self {
+                    capacity: 0,
+                    durability: 5,
+                    flavor: -1,
+                    texture: 0,
+                    //calories: 8,
                 }
-                IngredientName::Butterscotch => {
-                    Self {
-                        capacity: -1,
-                        durability: 0,
-                        flavor: 5,
-                        texture: 0,
-                        //calories: 6,
-                    }
+            }
+            IngredientName::Butterscotch => {
+                Self {
+                    capacity: -1,
+                    durability: 0,
+                    flavor: 5,
+                    texture: 0,
+                    //calories: 6,
                 }
-                IngredientName::Sugar => {
-                    Self {
-                        capacity: 0,
-                        durability: 0,
-                        flavor: -2,
-                        texture: 2,
-                        //calories: 1,
-                    }
+            }
+            IngredientName::Sugar => {
+                Self {
+                    capacity: 0,
+                    durability: 0,
+                    flavor: -2,
+                    texture: 2,
+                    //calories: 1,
                 }
-                /* TEST INGREDIENTS
-            IngredientName::Butterscotch => Self {
-                capacity: -1,
-                durability: -2,
-                flavor: 6,
-                texture: 3,
-                //calories: 8,
-            },
-            IngredientName::Cinnamon => Self {
-                capacity: 2,
-                durability: 3,
-                flavor: -2,
-                texture: -1,
-                //calories: 3,
-            },
-            */
+            } /* TEST INGREDIENTS
+              IngredientName::Butterscotch => Self {
+                  capacity: -1,
+                  durability: -2,
+                  flavor: 6,
+                  texture: 3,
+                  //calories: 8,
+              },
+              IngredientName::Cinnamon => Self {
+                  capacity: 2,
+                  durability: 3,
+                  flavor: -2,
+                  texture: -1,
+                  //calories: 3,
+              },
+              */
         }
     }
 
@@ -142,7 +141,7 @@ impl IngredientScore {
             * std::cmp::max(0, self.durability)
             * std::cmp::max(0, self.flavor)
             * std::cmp::max(0, self.texture)
-            // * std::cmp::max(0, self.calories)
+        // * std::cmp::max(0, self.calories)
     }
 }
 
@@ -153,7 +152,9 @@ struct Recipe {
 
 impl Recipe {
     fn zero() -> Self {
-        Self { ingredients: BTreeMap::new() }
+        Self {
+            ingredients: BTreeMap::new(),
+        }
     }
 
     fn ingredient_count(&self) -> usize {
@@ -170,9 +171,7 @@ impl Recipe {
         let mut ingredients = self.ingredients.clone();
         *ingredients.entry(ingredient_name).or_insert(0) += 1;
 
-        Self {
-            ingredients,
-        }
+        Self { ingredients }
     }
 
     fn score(&self) -> i32 {
@@ -199,10 +198,22 @@ fn populate_recipes(base_recipe: Recipe, required_size: usize) -> BTreeSet<Recip
     let mut all_recipes = BTreeSet::new();
 
     // Add one of each then recurse
-    all_recipes.append(&mut populate_recipes(base_recipe.add_ingredient(IngredientName::Frosting), required_size));
-    all_recipes.append(&mut populate_recipes(base_recipe.add_ingredient(IngredientName::Candy), required_size));
-    all_recipes.append(&mut populate_recipes(base_recipe.add_ingredient(IngredientName::Butterscotch), required_size));
-    all_recipes.append(&mut populate_recipes(base_recipe.add_ingredient(IngredientName::Sugar), required_size));
+    all_recipes.append(&mut populate_recipes(
+        base_recipe.add_ingredient(IngredientName::Frosting),
+        required_size,
+    ));
+    all_recipes.append(&mut populate_recipes(
+        base_recipe.add_ingredient(IngredientName::Candy),
+        required_size,
+    ));
+    all_recipes.append(&mut populate_recipes(
+        base_recipe.add_ingredient(IngredientName::Butterscotch),
+        required_size,
+    ));
+    all_recipes.append(&mut populate_recipes(
+        base_recipe.add_ingredient(IngredientName::Sugar),
+        required_size,
+    ));
 
     all_recipes
 }

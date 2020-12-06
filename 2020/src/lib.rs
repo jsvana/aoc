@@ -1,5 +1,5 @@
-use std::str::FromStr;
 use std::error::Error;
+use std::str::FromStr;
 
 use anyhow::Result;
 use structopt::StructOpt;
@@ -10,7 +10,10 @@ pub struct Args {
 }
 
 pub fn read_lines<T>(filename: &str) -> Result<Vec<T>>
-where T: FromStr, <T as FromStr>::Err: 'static + Error + Send + Sync {
+where
+    T: FromStr,
+    <T as FromStr>::Err: 'static + Error + Send + Sync,
+{
     let contents = std::fs::read_to_string(filename)?;
 
     let mut values = Vec::new();

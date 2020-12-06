@@ -88,7 +88,7 @@ fn is_valid_hcl(value: &str) -> bool {
 }
 
 fn is_valid_ecl(value: &str) -> bool {
-    let valid_ecls = btreeset!{
+    let valid_ecls = btreeset! {
         "amb", "blu", "brn", "gry", "grn", "hzl", "oth",
     };
 
@@ -116,7 +116,9 @@ struct Passport {
 
 impl Passport {
     fn new() -> Self {
-        Self { fields: BTreeMap::new() }
+        Self {
+            fields: BTreeMap::new(),
+        }
     }
 
     fn add_field(&mut self, field: &str, value: &str) {
@@ -124,7 +126,7 @@ impl Passport {
     }
 
     fn has_valid_fields(&self) -> bool {
-        let required_fields = btreeset!{
+        let required_fields = btreeset! {
             "byr".to_string(),
             "iyr".to_string(),
             "eyr".to_string(),
@@ -134,9 +136,16 @@ impl Passport {
             "pid".to_string(),
         };
 
-        let optional_fields = btreeset!{"cid".to_string()};
+        let optional_fields = btreeset! {"cid".to_string()};
 
-        let fields: BTreeSet<String> = self.fields.keys().cloned().collect::<BTreeSet<String>>().difference(&optional_fields).cloned().collect();
+        let fields: BTreeSet<String> = self
+            .fields
+            .keys()
+            .cloned()
+            .collect::<BTreeSet<String>>()
+            .difference(&optional_fields)
+            .cloned()
+            .collect();
 
         fields == required_fields
     }
@@ -245,8 +254,12 @@ fn main() -> Result<()> {
 
         for token in line.split_whitespace() {
             let parts: Vec<&str> = token.split(":").collect();
-            let field = parts.get(0).ok_or_else(|| format_err!("token \"{}\" missing field", token))?;
-            let value = parts.get(1).ok_or_else(|| format_err!("token \"{}\" missing value", token))?;
+            let field = parts
+                .get(0)
+                .ok_or_else(|| format_err!("token \"{}\" missing field", token))?;
+            let value = parts
+                .get(1)
+                .ok_or_else(|| format_err!("token \"{}\" missing value", token))?;
 
             current_passport.add_field(field, value);
         }

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use structopt::StructOpt;
 
-use aoc_2020::{Args, read_lines};
+use aoc_2020::{read_lines, Args};
 
 fn main() -> Result<()> {
     let args = Args::from_args();
@@ -21,7 +21,7 @@ fn main() -> Result<()> {
 
                 if first_number + second_number + third_number == 2020 {
                     println!("{}", first_number * second_number * third_number);
-                    return Ok(())
+                    return Ok(());
                 }
             }
         }

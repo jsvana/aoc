@@ -4,7 +4,7 @@ use anyhow::Result;
 use structopt::StructOpt;
 use thiserror::Error;
 
-use aoc_2020::{Args, read_lines};
+use aoc_2020::{read_lines, Args};
 
 #[derive(Debug)]
 struct Policy {
@@ -24,12 +24,36 @@ impl FromStr for Policy {
 
     fn from_str(line: &str) -> Result<Self, Self::Err> {
         let parts: Vec<&str> = line.split("-").collect();
-        let lower_count: usize = parts.get(0).ok_or_else(|| PolicyError::General(format!("{} missing lower", line)))?.parse().map_err(|_| PolicyError::General("can't parse".to_string()))?;
-        let parts: Vec<&str> = parts.get(1).ok_or_else(|| PolicyError::General(format!("{} missing rest", line)))?.split(" ").collect();
-        let higher_count: usize = parts.get(0).ok_or_else(|| PolicyError::General(format!("{} missing higher", line)))?.parse().map_err(|_| PolicyError::General("can't parse".to_string()))?;
-        let parts: Vec<&str> = parts.get(1).ok_or_else(|| PolicyError::General(format!("{} missing rest", line)))?.split(":").collect();
-        let letter: char = parts.get(0).ok_or_else(|| PolicyError::General(format!("{} missing letter", line)))?.parse().map_err(|_| PolicyError::General("can't parse".to_string()))?;
-        Ok(Self {lower_count, higher_count, letter})
+        let lower_count: usize = parts
+            .get(0)
+            .ok_or_else(|| PolicyError::General(format!("{} missing lower", line)))?
+            .parse()
+            .map_err(|_| PolicyError::General("can't parse".to_string()))?;
+        let parts: Vec<&str> = parts
+            .get(1)
+            .ok_or_else(|| PolicyError::General(format!("{} missing rest", line)))?
+            .split(" ")
+            .collect();
+        let higher_count: usize = parts
+            .get(0)
+            .ok_or_else(|| PolicyError::General(format!("{} missing higher", line)))?
+            .parse()
+            .map_err(|_| PolicyError::General("can't parse".to_string()))?;
+        let parts: Vec<&str> = parts
+            .get(1)
+            .ok_or_else(|| PolicyError::General(format!("{} missing rest", line)))?
+            .split(":")
+            .collect();
+        let letter: char = parts
+            .get(0)
+            .ok_or_else(|| PolicyError::General(format!("{} missing letter", line)))?
+            .parse()
+            .map_err(|_| PolicyError::General("can't parse".to_string()))?;
+        Ok(Self {
+            lower_count,
+            higher_count,
+            letter,
+        })
     }
 }
 
@@ -64,16 +88,21 @@ impl FromStr for Password {
         let policy = Policy::from_str(line)?;
 
         let parts: Vec<&str> = line.split(" ").collect();
-        let password = parts.get(2).ok_or_else(|| PasswordError::General(format!("{} missing password", line)))?.to_string();
+        let password = parts
+            .get(2)
+            .ok_or_else(|| PasswordError::General(format!("{} missing password", line)))?
+            .to_string();
 
-        Ok(Self {policy, password})
+        Ok(Self { policy, password })
     }
 }
 
 impl Password {
     fn passes(&self) -> bool {
-        let first_okay = str_has_char_at(&self.password, self.policy.letter, self.policy.lower_count);
-        let second_okay = str_has_char_at(&self.password, self.policy.letter, self.policy.higher_count);
+        let first_okay =
+            str_has_char_at(&self.password, self.policy.letter, self.policy.lower_count);
+        let second_okay =
+            str_has_char_at(&self.password, self.policy.letter, self.policy.higher_count);
 
         first_okay ^ second_okay
     }

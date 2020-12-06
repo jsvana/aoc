@@ -73,17 +73,9 @@ fn main() -> Result<()> {
     for i in 0..1024 {
         let current_exists = filled[i];
 
-        let previous_exists = if i > 0 {
-            filled[i - 1]
-        } else {
-            true
-        };
+        let previous_exists = if i > 0 { filled[i - 1] } else { true };
 
-        let next_exists = if i < 1023 {
-            filled[i + 1]
-        } else {
-            true
-        };
+        let next_exists = if i < 1023 { filled[i + 1] } else { true };
 
         if !current_exists && previous_exists && next_exists {
             println!("{}", i);
