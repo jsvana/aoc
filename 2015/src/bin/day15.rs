@@ -1,6 +1,7 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeSet, BTreeMap};
 
 use anyhow::{format_err, Result};
+use maplit::btreeset;
 
 /*
 Frosting: capacity 4, durability -2, flavor 0, texture 0, calories 5
@@ -145,7 +146,7 @@ impl IngredientScore {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
 struct Recipe {
     ingredients: BTreeMap<IngredientName, i32>,
 }
@@ -153,6 +154,16 @@ struct Recipe {
 impl Recipe {
     fn zero() -> Self {
         Self { ingredients: BTreeMap::new() }
+    }
+
+    fn ingredient_count(&self) -> usize {
+        let mut count: usize = 0;
+
+        for ingredient_count in self.ingredients.values() {
+            count += *ingredient_count as usize;
+        }
+
+        count
     }
 
     fn add_ingredient(&self, ingredient_name: IngredientName) -> Self {
@@ -175,75 +186,39 @@ impl Recipe {
     }
 }
 
-fn max_for_next_addition(base_recipe: &Recipe) -> Result<Recipe> {
-    println!("Starting with {}: {:?}", base_recipe.score(), base_recipe.ingredients);
-    let mut max_recipe: Option<Recipe> = None;
-
-    let add_frosting = base_recipe.add_ingredient(IngredientName::Frosting);
-    match &max_recipe {
-        Some(recipe) => {
-            if add_frosting.score() > recipe.score() {
-                max_recipe = Some(add_frosting);
-            }
-        }
-        None => {
-            max_recipe = Some(add_frosting);
-        }
+fn populate_recipes(base_recipe: Recipe, required_size: usize) -> BTreeSet<Recipe> {
+    let missing_count = required_size - base_recipe.ingredient_count();
+    if missing_count == 0 {
+        return btreeset! { base_recipe };
     }
 
-    let add_candy = base_recipe.add_ingredient(IngredientName::Candy);
-    match &max_recipe {
-        Some(recipe) => {
-            if add_candy.score() > recipe.score() {
-                max_recipe = Some(add_candy);
-            }
-        }
-        None => {
-            max_recipe = Some(add_candy);
-        }
+    if missing_count == 50 {
+        println!("50 left");
     }
 
-    let add_butterscotch = base_recipe.add_ingredient(IngredientName::Butterscotch);
-    match &max_recipe {
-        Some(recipe) => {
-            if add_butterscotch.score() > recipe.score() {
-                max_recipe = Some(add_butterscotch);
-            }
-        }
-        None => {
-            max_recipe = Some(add_butterscotch);
-        }
-    }
+    let mut all_recipes = BTreeSet::new();
 
-    let add_sugar = base_recipe.add_ingredient(IngredientName::Sugar);
-    match &max_recipe {
-        Some(recipe) => {
-            if add_sugar.score() > recipe.score() {
-                max_recipe = Some(add_sugar);
-            }
-        }
-        None => {
-            max_recipe = Some(add_sugar);
-        }
-    }
+    // Add one of each then recurse
+    all_recipes.append(&mut populate_recipes(base_recipe.add_ingredient(IngredientName::Frosting), required_size));
+    all_recipes.append(&mut populate_recipes(base_recipe.add_ingredient(IngredientName::Candy), required_size));
+    all_recipes.append(&mut populate_recipes(base_recipe.add_ingredient(IngredientName::Butterscotch), required_size));
+    all_recipes.append(&mut populate_recipes(base_recipe.add_ingredient(IngredientName::Sugar), required_size));
 
-    println!("Ending with {}: {:?}", max_recipe.as_ref().unwrap().score(), max_recipe.as_ref().unwrap().ingredients);
-
-    max_recipe.ok_or_else(|| format_err!("no max found"))
-}
-
-fn calculate(ingredient_count: usize) -> Result<i32> {
-    let mut max_recipe = Recipe::zero();
-
-    for _ in 0..ingredient_count {
-        max_recipe = max_for_next_addition(&max_recipe)?;
-    }
-
-    Ok(max_recipe.score())
+    all_recipes
 }
 
 fn main() -> Result<()> {
-    println!("{}", calculate(100)?);
+    let mut max_score = 0;
+
+    let recipes = populate_recipes(Recipe::zero(), 100);
+
+    println!("Generated {} recipes", recipes.len());
+
+    for recipe in recipes.into_iter() {
+        max_score = std::cmp::max(max_score, recipe.score());
+    }
+
+    println!("{}", max_score);
 
     Ok(())
 }
