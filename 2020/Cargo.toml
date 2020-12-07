@@ -34,6 +34,11 @@ name = "day6"
 test = false
 bench = false
 
+[[bin]]
+name = "day7"
+test = false
+bench = false
+
 [dependencies]
 anyhow = "*"
 maplit = "*"
