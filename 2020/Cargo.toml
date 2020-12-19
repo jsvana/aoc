@@ -74,9 +74,16 @@ name = "day18"
 test = false
 bench = false
 
+[[bin]]
+name = "day19"
+test = false
+bench = false
+
 [dependencies]
 anyhow = "*"
+log = "*"
 maplit = "*"
 peg = "*"
+pretty_env_logger = "*"
 structopt = "*"
 thiserror = "*"
