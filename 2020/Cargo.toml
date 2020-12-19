@@ -81,6 +81,7 @@ bench = false
 
 [dependencies]
 anyhow = "*"
+itertools = "*"
 log = "*"
 maplit = "*"
 peg = "*"

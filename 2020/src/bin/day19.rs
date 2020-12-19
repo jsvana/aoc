@@ -1,7 +1,9 @@
 use std::collections::HashMap;
+use std::fmt;
 use std::str::FromStr;
 
 use anyhow::{format_err, Result};
+use itertools::Itertools;
 use log::{debug, error, trace};
 use structopt::StructOpt;
 use thiserror::Error;
@@ -12,6 +14,15 @@ use aoc_2020::Args;
 enum Token {
     Char(char),
     Rule(i32),
+}
+
+impl fmt::Display for Token {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Token::Char(c) => write!(f, "c:{}", c),
+            Token::Rule(r) => write!(f, "r:{}", r),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -50,6 +61,16 @@ impl FromStr for Pattern {
     }
 }
 
+impl fmt::Display for Pattern {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "({})",
+            self.tokens.iter().map(|t| t.to_string()).join(",")
+        )
+    }
+}
+
 impl Pattern {
     fn matches(
         &self,
@@ -57,7 +78,7 @@ impl Pattern {
         string: &str,
         start_index: usize,
     ) -> Result<usize> {
-        trace!("checking idx {}", start_index);
+        trace!("  checking idx {}", start_index);
 
         let mut string_index = start_index;
 
@@ -69,7 +90,7 @@ impl Pattern {
                 Token::Char(c) => {
                     if string_index >= string.len() {
                         error!(
-                            "  {} longer than {}. input {}",
+                            "    {} longer than {}. input {}",
                             string_index,
                             string.len(),
                             string
@@ -87,14 +108,18 @@ impl Pattern {
                     {
                         string_index += 1;
                     } else {
-                        trace!("  char {}, no match", c);
+                        trace!("    char {}, no match", c);
                         return Err(format_err!("no match"));
                     }
                 }
             }
         }
 
-        trace!("  matches, idx {}", string_index);
+        trace!(
+            "    matches, [str:{}, pattern:{}]",
+            &string[string_index..],
+            self
+        );
 
         Ok(string_index)
     }
@@ -227,18 +252,35 @@ fn main() -> Result<()> {
 
     let args = Args::from_args();
 
-    let (rules, to_match) = build_rules(&args.filename)?;
+    let (mut rules, to_match) = build_rules(&args.filename)?;
 
+    /*
     let mut count = 0;
-    for string in to_match.into_iter() {
+    for string in to_match.iter() {
         debug!("test {}", string);
-        if let Ok(true) = rules_match(&rules, &string) {
+        if let Ok(true) = rules_match(&rules, string) {
             debug!("matches");
             count += 1;
         }
     }
 
     println!("Part 1: {}", count);
+    */
+
+    rules.insert(8, "8: 42 | 42 8".parse()?);
+    rules.insert(11, "11: 42 31 | 42 11 31".parse()?);
+
+    let mut count = 0;
+    for string in to_match[2..].iter() {
+        debug!("test {}", string);
+        if let Ok(true) = rules_match(&rules, string) {
+            debug!("matches");
+            count += 1;
+        }
+        break;
+    }
+
+    println!("Part 2: {}", count);
 
     Ok(())
 }
@@ -304,6 +346,141 @@ mod tests {
         assert!(!rules_match(&rules, "bababa")?);
         assert!(!rules_match(&rules, "aaabbb")?);
         assert!(!rules_match(&rules, "aaaabbb")?);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_second_example_without_mod() -> Result<()> {
+        let rules: HashMap<i32, Rule> = hashmap! {
+            42 => "42: 9 14 | 10 1".parse()?,
+            9 => "9: 14 27 | 1 26".parse()?,
+            10 => "10: 23 14 | 28 1".parse()?,
+            1 => "1: \"a\"".parse()?,
+            11 => "11: 42 31".parse()?,
+            5 => "5: 1 14 | 15 1".parse()?,
+            19 => "19: 14 1 | 14 14".parse()?,
+            12 => "12: 24 14 | 19 1".parse()?,
+            16 => "16: 15 1 | 14 14".parse()?,
+            31 => "31: 14 17 | 1 13".parse()?,
+            6 => "6: 14 14 | 1 14".parse()?,
+            2 => "2: 1 24 | 14 4".parse()?,
+            0 => "0: 8 11".parse()?,
+            13 => "13: 14 3 | 1 12".parse()?,
+            15 => "15: 1 | 14".parse()?,
+            17 => "17: 14 2 | 1 7".parse()?,
+            23 => "23: 25 1 | 22 14".parse()?,
+            28 => "28: 16 1".parse()?,
+            4 => "4: 1 1".parse()?,
+            20 => "20: 14 14 | 1 15".parse()?,
+            3 => "3: 5 14 | 16 1".parse()?,
+            27 => "27: 1 6 | 14 18".parse()?,
+            14 => "14: \"b\"".parse()?,
+            21 => "21: 14 1 | 1 14".parse()?,
+            25 => "25: 1 1 | 1 14".parse()?,
+            22 => "22: 14 14".parse()?,
+            8 => "8: 42".parse()?,
+            26 => "26: 14 22 | 1 20".parse()?,
+            18 => "18: 15 15".parse()?,
+            7 => "7: 14 5 | 1 21".parse()?,
+            24 => "24: 14 1".parse()?,
+        };
+
+        let should_match = vec!["bbabbbbaabaabba", "ababaaaaaabaaab", "ababaaaaabbbaba"];
+
+        for string in should_match.into_iter() {
+            assert!(rules_match(&rules, string)?);
+        }
+
+        let should_not_match = vec![
+            "abbbbbabbbaaaababbaabbbbabababbbabbbbbbabaaaa",
+            "babbbbaabbbbbabbbbbbaabaaabaaa",
+            "aaabbbbbbaaaabaababaabababbabaaabbababababaaa",
+            "bbbbbbbaaaabbbbaaabbabaaa",
+            "bbbababbbbaaaaaaaabbababaaababaabab",
+            "baabbaaaabbaaaababbaababb",
+            "abbbbabbbbaaaababbbbbbaaaababb",
+            "aaaaabbaabaaaaababaa",
+            "aaaabbaaaabbaaa",
+            "aaaabbaabbaaaaaaabbbabbbaaabbaabaaa",
+            "babaaabbbaaabaababbaabababaaab",
+            "aabbbbbaabbbaaaaaabbbbbababaaaaabbaaabba",
+        ];
+
+        for string in should_not_match.into_iter() {
+            assert!(!rules_match(&rules, string)?);
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_second_example_with_mod() -> Result<()> {
+        pretty_env_logger::init();
+
+        let rules: HashMap<i32, Rule> = hashmap! {
+            42 => "42: 9 14 | 10 1".parse()?,
+            9 => "9: 14 27 | 1 26".parse()?,
+            10 => "10: 23 14 | 28 1".parse()?,
+            1 => "1: \"a\"".parse()?,
+            11 => "11: 42 31 | 42 11 31".parse()?,
+            5 => "5: 1 14 | 15 1".parse()?,
+            19 => "19: 14 1 | 14 14".parse()?,
+            12 => "12: 24 14 | 19 1".parse()?,
+            16 => "16: 15 1 | 14 14".parse()?,
+            31 => "31: 14 17 | 1 13".parse()?,
+            6 => "6: 14 14 | 1 14".parse()?,
+            2 => "2: 1 24 | 14 4".parse()?,
+            0 => "0: 8 11".parse()?,
+            13 => "13: 14 3 | 1 12".parse()?,
+            15 => "15: 1 | 14".parse()?,
+            17 => "17: 14 2 | 1 7".parse()?,
+            23 => "23: 25 1 | 22 14".parse()?,
+            28 => "28: 16 1".parse()?,
+            4 => "4: 1 1".parse()?,
+            20 => "20: 14 14 | 1 15".parse()?,
+            3 => "3: 5 14 | 16 1".parse()?,
+            27 => "27: 1 6 | 14 18".parse()?,
+            14 => "14: \"b\"".parse()?,
+            21 => "21: 14 1 | 1 14".parse()?,
+            25 => "25: 1 1 | 1 14".parse()?,
+            22 => "22: 14 14".parse()?,
+            8 => "8: 42 | 42 8".parse()?,
+            26 => "26: 14 22 | 1 20".parse()?,
+            18 => "18: 15 15".parse()?,
+            7 => "7: 14 5 | 1 21".parse()?,
+            24 => "24: 14 1".parse()?,
+        };
+
+        let should_match = vec![
+            "bbabbbbaabaabba",
+            "babbbbaabbbbbabbbbbbaabaaabaaa",
+            "aaabbbbbbaaaabaababaabababbabaaabbababababaaa",
+            "bbbbbbbaaaabbbbaaabbabaaa",
+            "bbbababbbbaaaaaaaabbababaaababaabab",
+            "ababaaaaaabaaab",
+            "ababaaaaabbbaba",
+            "baabbaaaabbaaaababbaababb",
+            "abbbbabbbbaaaababbbbbbaaaababb",
+            "aaaaabbaabaaaaababaa",
+            "aaaabbaabbaaaaaaabbbabbbaaabbaabaaa",
+            "aabbbbbaabbbaaaaaabbbbbababaaaaabbaaabba",
+        ];
+
+        for string in should_match.into_iter() {
+            debug!("testing {}", string);
+            assert!(rules_match(&rules, string)?);
+        }
+
+        let should_not_match = vec![
+            "abbbbbabbbaaaababbaabbbbabababbbabbbbbbabaaaa",
+            "aaaabbaaaabbaaa",
+            "babaaabbbaaabaababbaabababaaab",
+        ];
+
+        for string in should_not_match.into_iter() {
+            assert!(!rules_match(&rules, string)?);
+        }
 
         Ok(())
     }
