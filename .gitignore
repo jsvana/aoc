@@ -1,2 +1,7 @@
 */target
 .mypy_cache/
+
+a.out
+*/part1
+*/part2
+*.o
