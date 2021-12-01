@@ -1,0 +1,20 @@
+[package]
+name = "aoc_2021"
+version = "0.1.0"
+authors = ["Jay Vana <jaysvana@gmail.com>"]
+edition = "2021"
+
+[[bin]]
+name = "day1"
+test = false
+bench = false
+
+[dependencies]
+anyhow = "*"
+itertools = "*"
+log = "*"
+maplit = "*"
+peg = "*"
+pretty_env_logger = "*"
+structopt = "*"
+thiserror = "*"
