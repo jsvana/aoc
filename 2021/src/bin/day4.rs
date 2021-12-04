@@ -1,22 +1,19 @@
-use std::collections::VecDeque;
+use std::collections::{HashSet, VecDeque};
 
 use anyhow::{anyhow, Result};
 use structopt::StructOpt;
 
 use aoc_2021::{read_lines, Args};
 
-fn part2(lines: Vec<String>) -> Result<()> {
-    Ok(())
-}
-
 #[derive(Debug)]
 struct BingoBoard<const SIZE: usize> {
+    id: usize,
     spaces: [[i32; SIZE]; SIZE],
     marked: [[bool; SIZE]; SIZE],
 }
 
 impl<const SIZE: usize> BingoBoard<SIZE> {
-    fn from_iter<'a, T>(iter: &mut T) -> Result<Self>
+    fn from_iter<'a, T>(iter: &mut T, id: usize) -> Result<Self>
     where
         T: Iterator<Item = &'a String>,
     {
@@ -52,6 +49,7 @@ impl<const SIZE: usize> BingoBoard<SIZE> {
         }
 
         Ok(Self {
+            id,
             spaces,
             marked: [[false; SIZE]; SIZE],
         })
@@ -163,27 +161,35 @@ fn main() -> Result<()> {
 
     let mut lines_iter = lines_iter.peekable();
 
+    let mut board_id = 0;
     let mut boards = Vec::new();
     while let Some(_) = lines_iter.peek() {
-        boards.push(BingoBoard::<5>::from_iter(&mut lines_iter)?);
+        boards.push(BingoBoard::<5>::from_iter(&mut lines_iter, board_id)?);
+        board_id += 1;
     }
 
-    let mut has_win = false;
+    dbg!(board_id);
 
-    for input in inputs.iter() {
+    let mut winning_ids = HashSet::new();
+    let mut found_last = false;
+
+    for input in inputs {
         for board in &mut boards {
             board.add_number(input);
             if board.has_win() {
-                has_win = true;
-                println!("{}", board.unmarked_sum() * input);
-                break;
+                winning_ids.insert(board.id);
+                if winning_ids.len() == board_id {
+                    println!("{}", board.unmarked_sum() * input);
+                    found_last = true;
+                    break;
+                }
             }
         }
 
-        if has_win {
+        if found_last {
             break;
         }
     }
 
-    part2(lines)
+    Ok(())
 }
