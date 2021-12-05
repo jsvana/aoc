@@ -46,8 +46,6 @@ fn main() -> Result<()> {
         });
     }
 
-    dbg!(&lines);
-
     let mut max_x = 0;
     let mut max_y = 0;
     for line in lines {
@@ -59,6 +57,23 @@ fn main() -> Result<()> {
         }
 
         if (line.start.y != line.end.y && line.start.x != line.end.x) {
+            let mut x = line.start.x;
+            let mut y = line.start.y;
+            *map.entry(Point { x, y }).or_insert(0) += 1;
+            while (x != line.end.x) {
+                if x > line.end.x {
+                    x -= 1;
+                } else {
+                    x += 1;
+                }
+                if y > line.end.y {
+                    y -= 1;
+                } else {
+                    y += 1;
+                }
+                *map.entry(Point { x, y }).or_insert(0) += 1;
+            }
+
             continue;
         }
 
@@ -81,17 +96,18 @@ fn main() -> Result<()> {
         }
     }
 
+    /*
     for y in 0..=max_y {
         for x in 0..=max_x {
             print!("{}", map.get(&Point { x, y }).unwrap_or(&0));
         }
         println!("");
     }
+    */
 
     let mut total = 0;
     for (point, count) in map {
         if count >= 2 {
-            println!("{}, {}", point.x, point.y);
             total += 1;
         }
     }
