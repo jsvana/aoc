@@ -29,9 +29,15 @@ name = "day5"
 test = false
 bench = false
 
+[[bin]]
+name = "day8"
+test = false
+bench = false
+
 [dependencies]
 anyhow = "*"
 itertools = "*"
+lazy_static = "1.4.0"
 log = "*"
 maplit = "*"
 peg = "*"
