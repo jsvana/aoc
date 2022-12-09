@@ -1,0 +1,49 @@
+[package]
+name = "aoc_2022"
+version = "0.1.0"
+authors = ["Jay Vana <jaysvana@gmail.com>"]
+edition = "2021"
+
+[[bin]]
+name = "day1"
+test = false
+bench = false
+
+[[bin]]
+name = "day2"
+test = false
+bench = false
+
+[[bin]]
+name = "day3"
+test = false
+bench = false
+
+[[bin]]
+name = "day4"
+test = false
+bench = false
+
+[[bin]]
+name = "day5"
+test = false
+bench = false
+
+[[bin]]
+name = "day6"
+test = false
+bench = false
+
+[[bin]]
+name = "day7"
+test = false
+bench = false
+
+[dependencies]
+anyhow = "*"
+itertools = "*"
+log = "*"
+maplit = "*"
+pretty_env_logger = "*"
+structopt = "*"
+thiserror = "*"
