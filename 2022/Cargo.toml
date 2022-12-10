@@ -39,6 +39,16 @@ name = "day7"
 test = false
 bench = false
 
+[[bin]]
+name = "day8"
+test = false
+bench = false
+
+[[bin]]
+name = "day9"
+test = false
+bench = false
+
 [dependencies]
 anyhow = "*"
 itertools = "*"
