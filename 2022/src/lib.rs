@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 use std::error::Error;
+use std::fmt;
 use std::str::FromStr;
 
 use anyhow::{anyhow, Result};
@@ -29,7 +30,7 @@ where
     Ok(values)
 }
 
-#[derive(Hash, Eq, PartialEq, Debug)]
+#[derive(Clone, Hash, Eq, PartialEq, Debug)]
 pub struct Point {
     pub x: usize,
     pub y: usize,
@@ -41,9 +42,20 @@ impl Point {
     }
 }
 
+impl fmt::Display for Point {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "({}, {})", self.x, self.y,)
+    }
+}
+
+pub struct CoordinateValue<T> {
+    pub coordinates: Point,
+    pub value: T,
+}
+
 #[derive(Debug)]
 pub struct Matrix<T: Copy> {
-    data: Vec<Vec<T>>,
+    pub data: Vec<Vec<T>>,
     pub width: usize,
     pub height: usize,
 }
@@ -87,6 +99,22 @@ impl<T: Copy> Matrix<T> {
         neighbors
     }
 
+    pub fn cardinal_neighbor_coordinates_and_values(
+        &self,
+        x: usize,
+        y: usize,
+    ) -> Vec<CoordinateValue<T>> {
+        let mut neighbors = Vec::new();
+
+        for coordinates in self.cardinal_neighbor_coordinates(x, y) {
+            if let Some(value) = self.get(coordinates.x, coordinates.y) {
+                neighbors.push(CoordinateValue { coordinates, value });
+            }
+        }
+
+        neighbors
+    }
+
     pub fn all_neighbor_coordinates(&self, x: usize, y: usize) -> Vec<Point> {
         let mut coordinates = Vec::new();
 
@@ -121,6 +149,21 @@ where
     T: TryFrom<u32> + Copy,
     <T as TryFrom<u32>>::Error: 'static + Send + Sync + Error,
 {
+    read_matrix_with_transform(filename, |c: char| {
+        Ok(T::try_from(
+            c.to_digit(10)
+                .ok_or_else(|| anyhow!("Invalid digit {}", c))?,
+        )
+        .map_err(|e| anyhow!("Failed to parse char: {}", e))?)
+    })
+}
+
+pub fn read_matrix_with_transform<T, F>(filename: &str, transform: F) -> Result<Matrix<T>>
+where
+    T: TryFrom<u32> + Copy,
+    <T as TryFrom<u32>>::Error: 'static + Send + Sync + Error,
+    F: Fn(char) -> Result<T>,
+{
     let contents = std::fs::read_to_string(filename)?;
 
     let mut data: Vec<Vec<T>> = Vec::new();
@@ -132,10 +175,7 @@ where
 
         let mut row: Vec<T> = Vec::new();
         for c in line.chars() {
-            row.push(T::try_from(
-                c.to_digit(10)
-                    .ok_or_else(|| anyhow!("Invalid digit {}", c))?,
-            )?);
+            row.push(transform(c)?);
         }
         widths.insert(row.len());
         data.push(row);

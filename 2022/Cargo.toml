@@ -59,11 +59,22 @@ name = "day11"
 test = false
 bench = false
 
+[[bin]]
+name = "day12"
+test = false
+bench = false
+
+[[bin]]
+name = "day13"
+test = false
+bench = false
+
 [dependencies]
 anyhow = "*"
 itertools = "*"
 log = "*"
 maplit = "*"
 pretty_env_logger = "*"
+serde_json = "1.0.89"
 structopt = "*"
 thiserror = "*"
