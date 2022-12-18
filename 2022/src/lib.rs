@@ -42,6 +42,23 @@ impl Point {
     }
 }
 
+impl FromStr for Point {
+    type Err = anyhow::Error;
+
+    fn from_str(value: &str) -> Result<Self> {
+        let parts: Vec<&str> = value.split(',').collect();
+        let x: usize = parts
+            .get(0)
+            .ok_or_else(|| anyhow!("Missing x value"))?
+            .parse()?;
+        let y: usize = parts
+            .get(1)
+            .ok_or_else(|| anyhow!("Missing y value"))?
+            .parse()?;
+        Ok(Point::new(x, y))
+    }
+}
+
 impl fmt::Display for Point {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "({}, {})", self.x, self.y,)
