@@ -11,6 +11,28 @@ enum Packet {
     Packet(Vec<Packet>),
 }
 
+impl PartialEq for Packet {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Packet::Number(a), Packet::Number(b)) => a == b,
+            (Packet::Packet(a), Packet::Packet(b)) => {
+                if a.len() != b.len() {
+                    return false;
+                }
+
+                for i in 0..std::cmp::min(a.len(), b.len()) {
+                    if a[i] != b[i] {
+                        return false;
+                    }
+                }
+
+                true
+            }
+            _ => false,
+        }
+    }
+}
+
 impl fmt::Display for Packet {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -35,70 +57,83 @@ enum CompareResult {
     Correct,
     Continue,
     OutOfOrder,
-    IncorrectlySized,
 }
 
 impl Packet {
     fn compare(&self, other: &Packet, indent: usize) -> CompareResult {
-        let indent_str: String = std::iter::repeat(" ").take(indent).collect();
+        //let indent_str: String = std::iter::repeat(" ").take(indent).collect();
 
         let mut left = self.clone();
         let mut right = other.clone();
 
         if let (Packet::Number(_), Packet::Packet(_)) = (self, other) {
             let left_list = Packet::Packet(vec![self.clone()]);
+            /*
             println!(
                 "{}- Mixed types; convert left to {} and retry comparison",
                 indent_str, left_list
             );
+            */
             left = left_list;
         }
 
         if let (Packet::Packet(_), Packet::Number(_)) = (self, other) {
             let right_list = Packet::Packet(vec![other.clone()]);
+            /*
             println!(
                 "{}- Mixed types; convert right to {} and retry comparison",
                 indent_str, right_list
             );
+            */
             right = right_list;
         }
 
+        /*
         println!("{}- Compare {} vs {}", indent_str, left, right);
+        */
 
         match (left, right) {
             (Packet::Number(left), Packet::Number(right)) => {
                 if left < right {
+                    /*
                     println!(
                         "{}- Left side is smaller, so inputs are in the right order",
                         std::iter::repeat(" ").take(indent + 2).collect::<String>()
                     );
+                    */
                     CompareResult::Correct
                 } else if left == right {
                     CompareResult::Continue
                 } else {
+                    /*
                     println!(
                         "{}- Right side is smaller, so inputs are not in the right order",
                         std::iter::repeat(" ").take(indent + 2).collect::<String>()
                     );
+                    */
                     CompareResult::OutOfOrder
                 }
             }
             (Packet::Packet(left_list), Packet::Packet(right_list)) => {
                 for i in 0..std::cmp::max(left_list.len(), right_list.len()) {
                     if i >= left_list.len() {
+                        /*
                         println!(
                             "{}- Left side ran out of items, so inputs are in the right order",
                             std::iter::repeat(" ").take(indent + 2).collect::<String>()
                         );
+                        */
                         return CompareResult::Correct;
                     }
 
                     if i >= right_list.len() {
+                        /*
                         println!(
                             "{}- Right side ran out of items, so inputs are not in the right order",
                             std::iter::repeat(" ").take(indent + 2).collect::<String>()
                         );
-                        return CompareResult::IncorrectlySized;
+                        */
+                        return CompareResult::OutOfOrder;
                     }
 
                     let left = &left_list[i];
@@ -157,7 +192,9 @@ fn main() -> Result<()> {
     let contents = std::fs::read_to_string(&args.filename)?;
     let mut lines = contents.lines().peekable();
 
+    let mut packets = Vec::new();
     let mut pairs = Vec::new();
+
     while lines.peek().is_some() {
         if let Some(&"") = lines.peek() {
             lines.next();
@@ -172,20 +209,47 @@ fn main() -> Result<()> {
             value.try_into()?
         };
 
-        pairs.push(Pair { left, right });
+        pairs.push(Pair {
+            left: left.clone(),
+            right: right.clone(),
+        });
+        packets.push(left);
+        packets.push(right);
     }
 
     let mut sum = 0;
     for (i, pair) in pairs.iter().enumerate() {
-        println!("== Pair {} ==", i + 1);
+        //println!("== Pair {} ==", i + 1);
         let result = pair.compare();
         if let CompareResult::Correct = result {
             sum += i + 1;
         }
-        println!("");
+        //println!("");
     }
 
     println!("{}", sum);
+
+    let two = Packet::Packet(vec![Packet::Packet(vec![Packet::Number(2)])]);
+    packets.push(two.clone());
+    let six = Packet::Packet(vec![Packet::Packet(vec![Packet::Number(6)])]);
+    packets.push(six.clone());
+
+    for j in 0..packets.len() {
+        for i in 0..packets.len() - 1 {
+            if let CompareResult::OutOfOrder = packets[i].compare(&packets[j], 0) {
+                packets.swap(i, j);
+            }
+        }
+    }
+
+    let mut found_indexes = 1;
+    for (i, packet) in packets.iter().enumerate() {
+        if packet == &six || packet == &two {
+            found_indexes *= i + 1;
+        }
+    }
+
+    println!("{}", found_indexes);
 
     Ok(())
 }
